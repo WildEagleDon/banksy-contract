@@ -17,11 +17,12 @@ contract SplitWallet is ERC20, Ownable {
     }
 
     // init the wallet
-    function init(string memory name, string memory symbol, address owner, address gover) external {
+    function init(string memory name, string memory symbol, address owner, address goverAddr) 
+    external {
         require(address(governance) == address(0), "governance has been register");
-        require(address(gover) != address(0), "governance is null");
+        require(address(goverAddr) != address(0), "governance is null");
         ERC20._init(name, symbol);
-        governance = IGovernance(gover);
+        governance = IGovernance(goverAddr);
         transferOwnership(owner);
     }
 
