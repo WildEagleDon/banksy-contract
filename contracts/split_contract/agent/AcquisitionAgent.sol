@@ -2,6 +2,7 @@
 pragma solidity ^0.7.0;
 import "../splitwallet/SplitWallet.sol";
 import "hardhat/console.sol";
+import "../agent/Agent.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
 
@@ -13,7 +14,7 @@ struct AcquisitionInfo {
     uint256 amount;
 }
 
-contract AcquisitionAgent {
+contract AcquisitionAgent is Agent {
     // is the duration of the acquisition
     uint256 public constant ACQUISITION_TIMEOUT = 10 seconds;
 
@@ -22,9 +23,10 @@ contract AcquisitionAgent {
     event Refused (SplitWallet wallet, address acquirer);
 
 
+    constructor (address goverAddr) Agent(goverAddr) {}
     // register a agent for a wallet
     function start(SplitWallet wallet, uint256 unitPrice) external payable {
-
+        require(governance.isWallet(address(wallet)), "wallet is error format");
         require(infos[wallet].acquirer == address(0), "wallet is on anther acquisition");
         require(wallet.balanceOf(msg.sender) > 0, "acquirer has not split token");
         
