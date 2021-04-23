@@ -38,7 +38,7 @@ contract AcquisitionAgent is Agent {
         wallet.changeOwnerByAgent(address(this));
         
         wallet.transferFromByAgent(msg.sender, address(this), wallet.balanceOf(msg.sender));
-
+        
         infos[wallet].acquirer = msg.sender;
         infos[wallet].unitPrice = unitPrice;
         infos[wallet].beginTime = block.timestamp;
@@ -49,7 +49,6 @@ contract AcquisitionAgent is Agent {
 
     // to check if the acquisition is timeout
     function isTimeout(SplitWallet wallet) private view returns (bool) {
-        console.log(block.timestamp);
         return ((block.timestamp - infos[wallet].beginTime) >= ACQUISITION_TIMEOUT);
     }
 
@@ -101,7 +100,7 @@ contract AcquisitionAgent is Agent {
     function retrieve(SplitWallet wallet) external {
         (bool finish, bool accept) = isFinish(wallet);
         if(finish && accept) {
-            wallet.changeOwnerByAgent(address(this));
+            wallet.changeOwnerByAgent(msg.sender);
         }
     }
 
