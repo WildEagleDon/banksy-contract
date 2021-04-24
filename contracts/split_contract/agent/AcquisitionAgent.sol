@@ -12,6 +12,7 @@ struct AcquisitionInfo {
     uint256 beginTime;
     uint256 refuseFee;
     uint256 amount;
+    bool    isRefuse;
 }
 
 contract AcquisitionAgent is Agent {
@@ -43,8 +44,8 @@ contract AcquisitionAgent is Agent {
         infos[wallet].unitPrice = unitPrice;
         infos[wallet].beginTime = block.timestamp;
         infos[wallet].refuseFee = 0;
+        infos[wallet].isRefuse = false;
         infos[wallet].amount = payValue;
-
     }
 
     // to check if the acquisition is timeout
@@ -54,7 +55,7 @@ contract AcquisitionAgent is Agent {
 
     // to check if the acquisition is refused
     function isRefuse(SplitWallet wallet) private view returns (bool) {
-        return (infos[wallet].refuseFee == (wallet.balanceOf(address(this)) * infos[wallet].unitPrice));
+        return infos[wallet].isRefuse;
     }
 
     // to find if the acquisition is finished
@@ -73,6 +74,7 @@ contract AcquisitionAgent is Agent {
     // to refuse the acquisition 
     function refuse(SplitWallet wallet) external payable {
         require(infos[wallet].acquirer != address(0), "wallet is not on acquisition");
+        require(wallet.balanceOf(msg.sender) > 0, "sender do not have token");
         require(!isTimeout(wallet) && !isRefuse(wallet),"acquisition is finished");
 
         uint256 payValue = wallet.balanceOf(address(this)) * infos[wallet].unitPrice;
@@ -83,7 +85,7 @@ contract AcquisitionAgent is Agent {
             Address.sendValue(payable(msg.sender), overValue);
             msgValue -= overValue;
         }
-
+        infos[wallet].refuseFee += msgValue;
         uint256 tokenCount = msgValue / infos[wallet].unitPrice;
         
         infos[wallet].amount += msgValue;
@@ -91,6 +93,8 @@ contract AcquisitionAgent is Agent {
 
         if(infos[wallet].refuseFee == payValue) {
             // refuse succeed
+            infos[wallet].isRefuse = true;
+            
             Address.sendValue(payable(infos[wallet].acquirer), infos[wallet].amount);
             wallet.changeOwnerByAgent(address(0));
             emit Refused(wallet, infos[wallet].acquirer);
@@ -100,15 +104,17 @@ contract AcquisitionAgent is Agent {
     // if acquisition is accepted, use this function to get wallet owner
     function retrieve(SplitWallet wallet) external {
         (bool finish, bool accept) = isFinish(wallet);
-        if(finish && accept) {
-            wallet.changeOwnerByAgent(msg.sender);
-        }
+        require(finish && accept, "acquisition is not accepted");
+
+        wallet.burnByAgent(address(this), wallet.balanceOf(address(this)));
+        wallet.changeOwnerByAgent(msg.sender);
+        
     }
 
     // if acquisition is accepted, use this function to get claim fee
     function claim(SplitWallet wallet) external {
         (bool finish, bool accept) = isFinish(wallet);
-        require(finish == true && accept == true);
+        require(finish && accept, "acquisition is not accepted");
 
         wallet.burnByAgent(msg.sender, wallet.balanceOf(msg.sender));
         Address.sendValue(payable(msg.sender), infos[wallet].unitPrice * wallet.balanceOf(msg.sender));
