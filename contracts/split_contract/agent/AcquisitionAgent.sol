@@ -75,7 +75,7 @@ contract AcquisitionAgent is Agent {
         require(infos[wallet].acquirer != address(0), "wallet is not on acquisition");
         require(!isTimeout(wallet) && !isRefuse(wallet),"acquisition is finished");
 
-        uint256 payValue = wallet.balanceOf(infos[wallet].acquirer) * infos[wallet].unitPrice;
+        uint256 payValue = wallet.balanceOf(address(this)) * infos[wallet].unitPrice;
         uint256 msgValue = msg.value;
 
         if(infos[wallet].refuseFee + msgValue > payValue) {
@@ -92,6 +92,7 @@ contract AcquisitionAgent is Agent {
         if(infos[wallet].refuseFee == payValue) {
             // refuse succeed
             Address.sendValue(payable(infos[wallet].acquirer), infos[wallet].amount);
+            wallet.changeOwnerByAgent(address(0));
             emit Refused(wallet, infos[wallet].acquirer);
         }
     }
