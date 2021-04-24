@@ -21,7 +21,7 @@ contract Governance is IGovernance, Ownable {
     external onlyOwner() {
         walletTemplate = wallet;
     }
-
+// Whether an error will be reported if the agent is not set？
     function isAgentEnabled(address agent) external view override returns (bool) {
         return agentConfig[agent];
     }
