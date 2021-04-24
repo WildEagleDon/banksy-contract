@@ -40,10 +40,10 @@ contract("acuire accept test", accounts => {
 
   
   it("split wallet", async function() {
-     await basicSplitAgent.start(wallet.address,[owner, account1], [100, 200]);
+    await basicSplitAgent.start(wallet.address,[owner, account1], [100, 200]);
 
-     assert.equal(await wallet.balanceOf(owner), 100);
-     assert.equal(await wallet.balanceOf(account1), 200);
+    assert.equal(await wallet.balanceOf(owner), 100);
+    assert.equal(await wallet.balanceOf(account1), 200);
      
     // check the owner of wallet
     assert.equal(await wallet.owner(), 0);
@@ -94,7 +94,7 @@ contract("acuire accept test", accounts => {
 
     assert.equal(await wallet.owner(), owner);
     
-    // assert.equal(await wallet.totalSupply(), 190);
+    assert.equal(await wallet.totalSupply(), 190);
   });
 
   it("acquisition claim", async function() { 
@@ -102,7 +102,7 @@ contract("acuire accept test", accounts => {
     await acquisitionAgent.claim(wallet.address, {from: account1});
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account1), 0);
-    assert.equal(await wallet.totalSupply(), 110);
+    assert.equal(await wallet.totalSupply(), 0);
   });
 
   it("take back NFT", async function() { 
