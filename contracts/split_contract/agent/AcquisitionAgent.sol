@@ -10,7 +10,6 @@ struct AcquisitionInfo {
     address acquirer;
     uint256 unitPrice;
     uint256 beginTime;
-    uint256 refuseFee;
     uint256 amount;
     bool    isRefuse;
 }
@@ -43,7 +42,6 @@ contract AcquisitionAgent is Agent {
         infos[wallet].acquirer = msg.sender;
         infos[wallet].unitPrice = unitPrice;
         infos[wallet].beginTime = block.timestamp;
-        infos[wallet].refuseFee = 0;
         infos[wallet].isRefuse = false;
         infos[wallet].amount = payValue;
     }
@@ -80,18 +78,18 @@ contract AcquisitionAgent is Agent {
         uint256 payValue = wallet.balanceOf(address(this)) * infos[wallet].unitPrice;
         uint256 msgValue = msg.value;
 
-        if(infos[wallet].refuseFee + msgValue > payValue) {
-            uint256 overValue = (infos[wallet].refuseFee + msgValue - payValue);
+        if(msgValue > payValue) {
+            uint256 overValue = msgValue - payValue;
             Address.sendValue(payable(msg.sender), overValue);
             msgValue -= overValue;
         }
-        infos[wallet].refuseFee += msgValue;
+
         uint256 tokenCount = msgValue / infos[wallet].unitPrice;
         
         infos[wallet].amount += msgValue;
         wallet.transfer(msg.sender, tokenCount);
 
-        if(infos[wallet].refuseFee == payValue) {
+        if(msgValue == payValue) {
             // refuse succeed
             infos[wallet].isRefuse = true;
             
