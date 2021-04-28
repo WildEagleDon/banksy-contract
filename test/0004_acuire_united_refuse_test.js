@@ -1,3 +1,5 @@
+const tests = require("@daonomic/tests-common");
+
 const SplitWallet = artifacts.require("SplitWallet");
 const Governance = artifacts.require("Governance");
 const BasicSplitAgent = artifacts.require("BasicSplitAgent");
@@ -11,6 +13,7 @@ contract("acuire united refuse test", accounts => {
     [owner, account1, account2] = await web3.eth.getAccounts();
 
     governance = await Governance.new();
+    
     splitWalletTemplate = await SplitWallet.new();
     basicSplitAgent = await BasicSplitAgent.new(governance.address);
     acquisitionAgent = await AcquisitionAgent.new(governance.address);
@@ -109,4 +112,12 @@ contract("acuire united refuse test", accounts => {
     assert.equal(await wallet.balanceOf(acquisitionAgent.address), 0);
   });
 
+  it("acquisition retrieve whitout acception", async function() {
+    const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
+
+    assert.equal(finished, true);
+    assert.equal(accepted, false);
+    
+    await tests.expectThrow(acquisitionAgent.retrieve(wallet.address, {from: owner}));
+  });
 });
