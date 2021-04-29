@@ -34,7 +34,7 @@ contract AcquisitionAgent is Agent {
         
         require(payValue <= msg.value, "ether for acquisition is not match");
         Address.sendValue(payable(msg.sender), msg.value - payValue);
-
+        
         wallet.changeOwnerByAgent(address(this));
         
         wallet.transferFromByAgent(msg.sender, address(this), wallet.balanceOf(msg.sender));
@@ -113,8 +113,9 @@ contract AcquisitionAgent is Agent {
     function claim(SplitWallet wallet) external {
         (bool finish, bool accept) = isFinish(wallet);
         require(finish && accept, "acquisition is not accepted");
+        uint256 balance = wallet.balanceOf(msg.sender);
 
-        wallet.burnByAgent(msg.sender, wallet.balanceOf(msg.sender));
-        Address.sendValue(payable(msg.sender), infos[wallet].unitPrice * wallet.balanceOf(msg.sender));
+        wallet.burnByAgent(msg.sender, balance);
+        Address.sendValue(payable(msg.sender), infos[wallet].unitPrice * balance);
     }
 }
