@@ -10,7 +10,7 @@ const NFT = artifacts.require("NFT");
 contract("acuire united refuse test", accounts => {
   before(async function () {
 
-    [owner, account1, account2] = await web3.eth.getAccounts();
+    [owner, account1, account2, account3] = await web3.eth.getAccounts();
 
     governance = await Governance.new();
     
@@ -112,12 +112,15 @@ contract("acuire united refuse test", accounts => {
     assert.equal(await wallet.balanceOf(acquisitionAgent.address), 0);
   });
 
-  it("acquisition retrieve whitout acception", async function() {
-    const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
+  it("acquisition refuse 3", async function() {
+    await tests.expectThrow(acquisitionAgent.refuse(wallet.address, {from: account3, value: 160 * 10}));
+  });
 
-    assert.equal(finished, true);
-    assert.equal(accepted, false);
-    
+  it("acquisition retrieve whitout acception", async function() {
     await tests.expectThrow(acquisitionAgent.retrieve(wallet.address, {from: owner}));
+  });
+
+  it("acquisition claim whitout acception", async function() { 
+    await tests.expectThrow(acquisitionAgent.claim(wallet.address, {from: account1}));
   });
 });

@@ -130,9 +130,8 @@ contract("acuire refuse fail test", accounts => {
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account2), 0);
     assert.equal(await wallet.totalSupply(), 0);
-
   });
-  
+
   it("take back NFT", async function() { 
     await wallet.functionCallWithValue(
       nft.address,'0',

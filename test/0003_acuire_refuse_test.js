@@ -5,7 +5,6 @@ const Governance = artifacts.require("Governance");
 const BasicSplitAgent = artifacts.require("BasicSplitAgent");
 const AcquisitionAgent = artifacts.require("AcquisitionAgent");
 const NFT = artifacts.require("NFT");
-// 修改acuisition 对应的token个数*1e18
 
 contract("acuire refuse test", accounts => {
   before(async function () {
@@ -92,12 +91,11 @@ contract("acuire refuse test", accounts => {
   });
 
   it("acquisition retrieve whitout acception", async function() {
-    const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
-
-    assert.equal(finished, true);
-    assert.equal(accepted, false);
-    
     await tests.expectThrow(acquisitionAgent.retrieve(wallet.address, {from: owner}));
+  });
+
+  it("acquisition claim whitout acception", async function() { 
+    await tests.expectThrow(acquisitionAgent.claim(wallet.address, {from: account1}));
   });
 
 });
