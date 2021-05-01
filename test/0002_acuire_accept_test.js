@@ -54,7 +54,7 @@ contract("acuire accept test", accounts => {
   });
 
   it("transfer with token", async function() { 
-    await wallet.transfer(owner, 10, { from: account1 });
+    await wallet.transfer(owner, 10, { from: account1 , gasPrice: 0});
       
     // check token on the wallet
     assert.equal(await wallet.balanceOf(owner), 110);
@@ -66,15 +66,19 @@ contract("acuire accept test", accounts => {
   
   it("acquisition start", async function() {
     // acuire all token 
-    
-    await acquisitionAgent.start(wallet.address, 10, { from: owner, value: 190 * 10 });
+    await tests.verifyBalanceChange(acquisitionAgent.address, -1900, async() =>
+      await tests.verifyBalanceChange(owner, 1900, async () => 
+        await acquisitionAgent.start(wallet.address, 10, { from: owner, value: 190 * 10, gasPrice: 0})
+      )
+    );
+
     
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account1), 190);
     assert.equal(await wallet.balanceOf(acquisitionAgent.address), 110);
 
     // check ehter on the ethereum
-    assert.equal(await web3.eth.getBalance(acquisitionAgent.address), 190 * 10);
+    assert.equal(await web3.eth.getBalance(acquisitionAgent.address), 1900);
 
 
   });
@@ -85,7 +89,7 @@ contract("acuire accept test", accounts => {
     assert.equal(finished, false);
     assert.equal(accepted, false);
     
-    await tests.expectThrow(acquisitionAgent.retrieve(wallet.address, {from: owner}));
+    await tests.expectThrow(acquisitionAgent.retrieve(wallet.address, {from: owner, gasPrice: 0}));
 
     await tests.expectThrow(wallet.functionCallWithValue(
       nft.address,'0',
@@ -96,9 +100,7 @@ contract("acuire accept test", accounts => {
 
   it("acquisition timeout", async function() {
     // simulate time running
-    await web3.currentProvider.send({ jsonrpc: '2.0', method: 'evm_increaseTime', params: [11], id: new Date().getTime() }, (err, result) => {})
-    await web3.currentProvider.send({ jsonrpc: '2.0', method: 'evm_mine', id: new Date().getTime() }, (err, result) => {})
-
+    await tests.increaseTime(11);
     const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
 
     assert.equal(finished, true);
@@ -109,7 +111,7 @@ contract("acuire accept test", accounts => {
   it("acquisition retrieve", async function() { 
     //retrieve wallet owner
     
-    await acquisitionAgent.retrieve(wallet.address, {from: owner});
+    await acquisitionAgent.retrieve(wallet.address, {from: owner, gasPrice: 0});
 
     assert.equal(await wallet.owner(), owner);
     
@@ -118,7 +120,12 @@ contract("acuire accept test", accounts => {
 
   it("acquisition claim", async function() { 
     //retrieve wallet owner
-    await acquisitionAgent.claim(wallet.address, {from: account1});
+    
+    await tests.verifyBalanceChange(account1, -1900, async() =>
+      await tests.verifyBalanceChange(acquisitionAgent.address, 1900, async () => 
+        await acquisitionAgent.claim(wallet.address, {from: account1, gasPrice: 0})
+      )
+    )
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account1), 0);
     assert.equal(await wallet.totalSupply(), 0);
