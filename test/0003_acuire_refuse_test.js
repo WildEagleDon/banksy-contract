@@ -53,7 +53,7 @@ contract("acuire refuse test", accounts => {
   });
 
   it("transfer with token", async function() { 
-    await wallet.transfer(owner, 10, { from: account1 });
+    await wallet.transfer(owner, 10, { from: account1, gasPrice: 0});
       
     // check token on the wallet
     assert.equal(await wallet.balanceOf(owner), 110);
@@ -65,8 +65,11 @@ contract("acuire refuse test", accounts => {
   
   it("acquisition start", async function() {
     // acuire all token 
-    
-    await acquisitionAgent.start(wallet.address, 10, { from: owner, value: 190 * 10 });
+    await tests.verifyBalanceChange(acquisitionAgent.address, -1900, async() =>
+      await tests.verifyBalanceChange(owner, 1900, async () => 
+        await acquisitionAgent.start(wallet.address, 10, { from: owner, value: 190 * 10, gasPrice: 0 })
+      )
+    );
     
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account1), 190);
@@ -78,8 +81,13 @@ contract("acuire refuse test", accounts => {
 
   it("acquisition refuse", async function() {
     // simulate time running
-
-    await acquisitionAgent.refuse(wallet.address, {from: account1, value: 110 * 10});
+    await tests.verifyBalanceChange(owner, -(1100 + 1900), async() =>
+      await tests.verifyBalanceChange(acquisitionAgent.address, 1900, async() =>
+        await tests.verifyBalanceChange(account1, 1100, async () => 
+          await acquisitionAgent.refuse(wallet.address, {from: account1, value: 110 * 10, gasPrice: 0})
+        )
+      )
+    );
     const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
 
     assert.equal(finished, true);
@@ -91,11 +99,11 @@ contract("acuire refuse test", accounts => {
   });
 
   it("acquisition retrieve whitout acception", async function() {
-    await tests.expectThrow(acquisitionAgent.retrieve(wallet.address, {from: owner}));
+    await tests.expectThrow(acquisitionAgent.retrieve(wallet.address, {from: owner, gasPrice: 0}));
   });
 
   it("acquisition claim whitout acception", async function() { 
-    await tests.expectThrow(acquisitionAgent.claim(wallet.address, {from: account1}));
+    await tests.expectThrow(acquisitionAgent.claim(wallet.address, {from: account1, gasPrice: 0}));
   });
 
 });
