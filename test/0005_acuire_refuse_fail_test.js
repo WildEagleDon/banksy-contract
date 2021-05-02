@@ -1,3 +1,5 @@
+const tests = require("@daonomic/tests-common");
+
 const SplitWallet = artifacts.require("SplitWallet");
 const Governance = artifacts.require("Governance");
 const BasicSplitAgent = artifacts.require("BasicSplitAgent");
@@ -53,7 +55,7 @@ contract("acuire refuse fail test", accounts => {
   });
 
   it("transfer with token", async function() { 
-    await wallet.transfer(owner, 10, { from: account1 });
+    await wallet.transfer(owner, 10, { from: account1, gasPrice: 0});
       
     // check token on the wallet
     assert.equal(await wallet.balanceOf(owner), 110);
@@ -66,8 +68,11 @@ contract("acuire refuse fail test", accounts => {
   
   it("acquisition start", async function() {
     // acuire all token 
-    
-    await acquisitionAgent.start(wallet.address, 10, { from: owner, value: (300 + 190) * 10 });
+    await tests.verifyBalanceChange(acquisitionAgent.address, -4900, async() =>
+      await tests.verifyBalanceChange(owner, 4900, async () => 
+        await acquisitionAgent.start(wallet.address, 10, { from: owner, value: (300 + 190) * 10, gasPrice: 0})
+      )
+    );
     
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account1), 190);
@@ -80,8 +85,11 @@ contract("acuire refuse fail test", accounts => {
 
   it("acquisition refuse 1", async function() {
     // simulate time running
-
-    await acquisitionAgent.refuse(wallet.address, {from: account1, value: 50 * 10});
+    await tests.verifyBalanceChange(acquisitionAgent.address, -500, async() =>
+      await tests.verifyBalanceChange(account1, 500, async () => 
+        await acquisitionAgent.refuse(wallet.address, {from: account1, value: 50 * 10, gasPrice: 0})
+      )
+    );
     const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
 
     assert.equal(finished, false);
@@ -97,9 +105,8 @@ contract("acuire refuse fail test", accounts => {
   
   it("acquisition timeout", async function() {
     // simulate time running
-    await web3.currentProvider.send({ jsonrpc: '2.0', method: 'evm_increaseTime', params: [11], id: new Date().getTime() }, (err, result) => {})
-    await web3.currentProvider.send({ jsonrpc: '2.0', method: 'evm_mine', id: new Date().getTime() }, (err, result) => {})
-
+    await tests.increaseTime(11);
+    
     const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
 
     assert.equal(finished, true);
@@ -109,7 +116,7 @@ contract("acuire refuse fail test", accounts => {
   it("acquisition retrieve", async function() { 
     //retrieve wallet owner
     
-    await acquisitionAgent.retrieve(wallet.address, {from: owner});
+    await acquisitionAgent.retrieve(wallet.address, {from: owner, gasPrice: 0});
 
     assert.equal(await wallet.owner(), owner);
     
@@ -118,7 +125,12 @@ contract("acuire refuse fail test", accounts => {
 
   it("acquisition claim 1", async function() { 
     //retrieve wallet owner
-    await acquisitionAgent.claim(wallet.address, {from: account1});
+    await tests.verifyBalanceChange(account1, -1900-500, async() =>
+      await tests.verifyBalanceChange(acquisitionAgent.address, 1900 + 500, async () => 
+        await acquisitionAgent.claim(wallet.address, {from: account1, gasPrice: 0})
+      )
+    );
+
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account1), 0);
     assert.equal(await wallet.totalSupply(), 600 - (110 - 50) - (190 + 50));
@@ -126,7 +138,12 @@ contract("acuire refuse fail test", accounts => {
 
   it("acquisition claim 2", async function() { 
     //retrieve wallet owner
-    await acquisitionAgent.claim(wallet.address, {from: account2});
+    await tests.verifyBalanceChange(account2, -3000, async() =>
+      await tests.verifyBalanceChange(acquisitionAgent.address, 3000, async () => 
+        await acquisitionAgent.claim(wallet.address, {from: account2, gasPrice: 0})
+      )
+    );
+    
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account2), 0);
     assert.equal(await wallet.totalSupply(), 0);
