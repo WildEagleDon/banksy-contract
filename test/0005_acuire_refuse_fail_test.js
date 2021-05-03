@@ -7,10 +7,10 @@ const AcquisitionAgent = artifacts.require("AcquisitionAgent");
 const NFT = artifacts.require("NFT");
 // 修改acuisition 对应的token个数*1e18
 
-contract("acuire accept test", accounts => {
+contract("acuire refuse fail test", accounts => {
   before(async function () {
 
-    [owner, account1] = await web3.eth.getAccounts();
+    [owner, account1, account2] = await web3.eth.getAccounts();
 
     governance = await Governance.new();
     splitWalletTemplate = await SplitWallet.new();
@@ -42,23 +42,25 @@ contract("acuire accept test", accounts => {
 
   
   it("split wallet", async function() {
-    await basicSplitAgent.start(wallet.address,[owner, account1], [100, 200]);
+    await basicSplitAgent.start(wallet.address,[owner, account1, account2], [100, 200, 300]);
 
     assert.equal(await wallet.balanceOf(owner), 100);
     assert.equal(await wallet.balanceOf(account1), 200);
+    assert.equal(await wallet.balanceOf(account2), 300);
      
-    // check the owner of wallet
+      // check the owner of wallet
     assert.equal(await wallet.owner(), 0);
     
  
   });
 
   it("transfer with token", async function() { 
-    await wallet.transfer(owner, 10, { from: account1 , gasPrice: 0});
+    await wallet.transfer(owner, 10, { from: account1, gasPrice: 0});
       
     // check token on the wallet
     assert.equal(await wallet.balanceOf(owner), 110);
     assert.equal(await wallet.balanceOf(account1), 190);
+    assert.equal(await wallet.balanceOf(account2), 300);
     
 
   });
@@ -66,48 +68,51 @@ contract("acuire accept test", accounts => {
   
   it("acquisition start", async function() {
     // acuire all token 
-    await tests.verifyBalanceChange(acquisitionAgent.address, -1900, async() =>
-      await tests.verifyBalanceChange(owner, 1900, async () => 
-        await acquisitionAgent.start(wallet.address, 10, { from: owner, value: 190 * 10, gasPrice: 0})
+    await tests.verifyBalanceChange(acquisitionAgent.address, -4900, async() =>
+      await tests.verifyBalanceChange(owner, 4900, async () => 
+        await acquisitionAgent.start(wallet.address, 10, { from: owner, value: (300 + 190) * 10, gasPrice: 0})
       )
     );
-
     
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account1), 190);
+    assert.equal(await wallet.balanceOf(account2), 300);
     assert.equal(await wallet.balanceOf(acquisitionAgent.address), 110);
 
     // check ehter on the ethereum
-    assert.equal(await web3.eth.getBalance(acquisitionAgent.address), 1900);
-
-
+    assert.equal(await web3.eth.getBalance(acquisitionAgent.address), 490 * 10);
   });
 
-  it("acquisition retrieve whitout acception", async function() {
+  it("acquisition refuse 1", async function() {
+    // simulate time running
+    await tests.verifyBalanceChange(acquisitionAgent.address, -500, async() =>
+      await tests.verifyBalanceChange(account1, 500, async () => 
+        await acquisitionAgent.refuse(wallet.address, {from: account1, value: 50 * 10, gasPrice: 0})
+      )
+    );
     const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
 
     assert.equal(finished, false);
     assert.equal(accepted, false);
+
+    assert.equal(await wallet.owner(), acquisitionAgent.address);
+    assert.equal(await wallet.balanceOf(owner), 0);
+    assert.equal(await wallet.balanceOf(account1), 190 + 50);
+    assert.equal(await wallet.balanceOf(account2), 300);
+    assert.equal(await wallet.balanceOf(acquisitionAgent.address), 60);
     
-    await tests.expectThrow(acquisitionAgent.retrieve(wallet.address, {from: owner, gasPrice: 0}));
-
-    await tests.expectThrow(wallet.functionCallWithValue(
-      nft.address,'0',
-      nft.contract.methods.safeTransferFrom(wallet.address, owner, 1).encodeABI(),
-      { from: owner }
-    ));
   });
-
+  
   it("acquisition timeout", async function() {
     // simulate time running
     await tests.increaseTime(11);
+    
     const {finished, accepted} = await acquisitionAgent.isFinish(wallet.address);
 
     assert.equal(finished, true);
     assert.equal(accepted, true);
 
   });
-
   it("acquisition retrieve", async function() { 
     //retrieve wallet owner
     
@@ -115,19 +120,32 @@ contract("acuire accept test", accounts => {
 
     assert.equal(await wallet.owner(), owner);
     
-    assert.equal(await wallet.totalSupply(), 190);
+    assert.equal(await wallet.totalSupply(), 600 - (110 - 50));
   });
 
-  it("acquisition claim", async function() { 
+  it("acquisition claim 1", async function() { 
     //retrieve wallet owner
-    
-    await tests.verifyBalanceChange(account1, -1900, async() =>
-      await tests.verifyBalanceChange(acquisitionAgent.address, 1900, async () => 
+    await tests.verifyBalanceChange(account1, -1900-500, async() =>
+      await tests.verifyBalanceChange(acquisitionAgent.address, 1900 + 500, async () => 
         await acquisitionAgent.claim(wallet.address, {from: account1, gasPrice: 0})
       )
-    )
+    );
+
     assert.equal(await wallet.balanceOf(owner), 0);
     assert.equal(await wallet.balanceOf(account1), 0);
+    assert.equal(await wallet.totalSupply(), 600 - (110 - 50) - (190 + 50));
+  });
+
+  it("acquisition claim 2", async function() { 
+    //retrieve wallet owner
+    await tests.verifyBalanceChange(account2, -3000, async() =>
+      await tests.verifyBalanceChange(acquisitionAgent.address, 3000, async () => 
+        await acquisitionAgent.claim(wallet.address, {from: account2, gasPrice: 0})
+      )
+    );
+    
+    assert.equal(await wallet.balanceOf(owner), 0);
+    assert.equal(await wallet.balanceOf(account2), 0);
     assert.equal(await wallet.totalSupply(), 0);
   });
 
@@ -140,5 +158,4 @@ contract("acuire accept test", accounts => {
 
     assert.equal(await nft.ownerOf(tokenId), owner);
   });
-
 });
