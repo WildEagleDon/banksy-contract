@@ -33,7 +33,9 @@ contract AcquisitionAgent is Agent {
         uint256 payValue = (wallet.totalSupply() - wallet.balanceOf(msg.sender)) * unitPrice;
         
         require(payValue <= msg.value, "ether for acquisition is not match");
-        Address.sendValue(payable(msg.sender), msg.value - payValue);
+        if(msg.value > payValue) {
+            Address.sendValue(payable(msg.sender), msg.value - payValue);
+        }
         
         wallet.changeOwnerByAgent(address(this));
         
