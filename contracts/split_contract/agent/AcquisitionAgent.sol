@@ -15,13 +15,9 @@ struct AcquisitionInfo {
 }
 
 contract AcquisitionAgent is Agent {
-    // is the duration of the acquisition
-    uint256 public constant ACQUISITION_TIMEOUT = 10 seconds;
-
     mapping(SplitWallet => AcquisitionInfo) private infos;
 
     event Refused (SplitWallet wallet, address acquirer);
-
 
     constructor (address goverAddr) Agent(goverAddr) {}
     // register a agent for a wallet
@@ -50,7 +46,7 @@ contract AcquisitionAgent is Agent {
 
     // to check if the acquisition is timeout
     function isTimeout(SplitWallet wallet) private view returns (bool) {
-        return ((block.timestamp - infos[wallet].beginTime) >= ACQUISITION_TIMEOUT);
+        return ((block.timestamp - infos[wallet].beginTime) >= governance.getSetting("ACQUISITION_TIMEOUT"));
     }
 
     // to check if the acquisition is refused

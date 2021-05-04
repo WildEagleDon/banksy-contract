@@ -8,6 +8,7 @@ import "../utils/Clone.sol";
 
 contract Governance is IGovernance, Ownable {
     mapping(address => bool) agentConfig;
+    mapping(string => uint256) settings;
     address walletTemplate;
 
     event CreatedWallet(address newWallet);
@@ -15,6 +16,9 @@ contract Governance is IGovernance, Ownable {
     function setAgentEnabled(address agent, bool enable) 
     external onlyOwner() {
         agentConfig[agent] = enable;
+	
+    	// is the duration of the acquisition
+        settings["ACQUISITION_TIMEOUT"] = 10 seconds;
     }
 
     function setWalletTemplate(address wallet)
@@ -39,5 +43,13 @@ contract Governance is IGovernance, Ownable {
         return Clone.isClone(walletTemplate, wallet);
     }
 
+    function setSetting(string memory name, uint256 value)
+    external onlyOwner() {
+        settings[name] = value;
+    }
+
+    function getSetting(string memory name) external view override returns (uint256) {
+        return settings[name];
+    }
 }
 
