@@ -1,3 +1,5 @@
+const tests = require("@daonomic/tests-common");
+
 const SplitWallet = artifacts.require("SplitWallet");
 const Governance = artifacts.require("Governance");
 const BasicSplitAgent = artifacts.require("BasicSplitAgent");
@@ -15,7 +17,7 @@ contract("split test", accounts => {
     nft = await NFT.new();
 
     await governance.setWalletTemplate(splitWalletTemplate.address);
-    await governance.setAgentEnabled(basicSplitAgent.address, true);
+    await governance.addAgent(basicSplitAgent.address);
 
     const { receipt } = await governance.createWallet();
     wallet = await SplitWallet.at(receipt.logs.find(({ event}) => event == 'CreatedWallet').args.newWallet);
@@ -37,14 +39,19 @@ contract("split test", accounts => {
 
   
   it("split wallet", async function() {
-     await basicSplitAgent.start(wallet.address,[owner, account1],[100, 200]);
+    await basicSplitAgent.start(wallet.address,[owner, account1],[100, 200]);
 
-     assert.equal(await wallet.balanceOf(owner), 100);
-     assert.equal(await wallet.balanceOf(account1), 200);
+    assert.equal(await wallet.balanceOf(owner), 100);
+    assert.equal(await wallet.balanceOf(account1), 200);
      
     // check the owner of wallet
     assert.equal(await wallet.owner(), 0);
  
+  });
+  
+  it("try to split wallet again", async function() {
+    // the operation is invalid, so it will be reverted
+    await tests.expectThrow(basicSplitAgent.start(wallet.address,[owner, account1],[100, 200]));
   });
 
   it("transfer with token", async function() { 

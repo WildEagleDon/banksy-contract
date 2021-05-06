@@ -7,7 +7,7 @@ const AcquisitionAgent = artifacts.require("AcquisitionAgent");
 const NFT = artifacts.require("NFT");
 // 修改acuisition 对应的token个数*1e18
 
-contract("acuire accept test", accounts => {
+contract("governance test", accounts => {
   before(async function () {
 
     [owner, account1] = await web3.eth.getAccounts();
@@ -19,8 +19,8 @@ contract("acuire accept test", accounts => {
     nft = await NFT.new();
 
     await governance.setWalletTemplate(splitWalletTemplate.address);
-    await governance.setAgentEnabled(basicSplitAgent.address, true);
-    await governance.setAgentEnabled(acquisitionAgent.address, true);
+    await governance.addAgent(basicSplitAgent.address);
+    await governance.addAgent(acquisitionAgent.address);
     await governance.setSetting("ACQUISITION_TIMEOUT", 15);
 
     const { receipt } = await governance.createWallet();

@@ -19,8 +19,8 @@ contract("acuire accept test", accounts => {
     nft = await NFT.new();
 
     await governance.setWalletTemplate(splitWalletTemplate.address);
-    await governance.setAgentEnabled(basicSplitAgent.address, true);
-    await governance.setAgentEnabled(acquisitionAgent.address, true);
+    await governance.addAgent(basicSplitAgent.address);
+    await governance.addAgent(acquisitionAgent.address);
 
     const { receipt } = await governance.createWallet();
     wallet = await SplitWallet.at(receipt.logs.find(({ event}) => event == 'CreatedWallet').args.newWallet);

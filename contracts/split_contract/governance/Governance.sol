@@ -7,29 +7,46 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "../utils/Clone.sol";
 
 contract Governance is IGovernance, Ownable {
-    mapping(address => bool) agentConfig;
+    mapping(address => bool) aliveAgent;
+    mapping(address => bool) deprecatedAgent;
     mapping(string => uint256) settings;
     address walletTemplate;
 
     event CreatedWallet(address newWallet);
-
-    function setAgentEnabled(address agent, bool enable) 
-    external onlyOwner() {
-        agentConfig[agent] = enable;
-	
+    constructor () {
     	// is the duration of the acquisition
         settings["ACQUISITION_TIMEOUT"] = 10 seconds;
     }
 
-    function setWalletTemplate(address wallet)
+    function addAgent(address agent) 
     external onlyOwner() {
-        walletTemplate = wallet;
+        aliveAgent[agent] = true;
     }
 
-    function isAgentEnabled(address agent) external view override returns (bool) {
-        return agentConfig[agent];
+
+    function updateAgent(address oldAgent, address newAgent) 
+    external onlyOwner() {
+        require(aliveAgent[oldAgent], "oldAgent is not enabled");
+        require(!aliveAgent[newAgent], "newAgent is enabled");
+
+        aliveAgent[oldAgent] = false;
+        deprecatedAgent[oldAgent] = true;
+        aliveAgent[newAgent] = true;
     }
 
+    function isValidAgent(address agent) external view override returns (bool) {
+        return aliveAgent[agent] || deprecatedAgent[agent];
+    }
+
+
+    function isAliveAgent(address agent) external view override returns (bool) {
+        return aliveAgent[agent];
+    }
+
+    function isDeprecatedAgent(address agent) external view override returns (bool) {
+        return deprecatedAgent[agent];
+    }
+    
     function createWallet() external returns (address) { 
         require(walletTemplate != address(0), "wallet template has not init");
 
@@ -37,6 +54,11 @@ contract Governance is IGovernance, Ownable {
 
         emit CreatedWallet(newWallet);
         return newWallet;
+    }
+
+    function setWalletTemplate(address wallet)
+    external onlyOwner() {
+        walletTemplate = wallet;
     }
 
     function isWallet(address wallet) external view override returns (bool) {

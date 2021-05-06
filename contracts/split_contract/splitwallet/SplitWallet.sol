@@ -12,7 +12,7 @@ contract SplitWallet is ERC20, Ownable {
 
     // check if sender is a agent in governance
     modifier onlyAgent() {
-        require(governance.isAgentEnabled(msg.sender), "onlyAgent: caller is not the agent");
+        require(governance.isValidAgent(msg.sender), "onlyAgent: caller is not the agent");
         _;
     }
 

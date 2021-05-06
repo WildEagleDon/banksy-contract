@@ -21,7 +21,8 @@ contract AcquisitionAgent is Agent {
 
     constructor (address goverAddr) Agent(goverAddr) {}
     // register a agent for a wallet
-    function start(SplitWallet wallet, uint256 unitPrice) external payable {
+    function start(SplitWallet wallet, uint256 unitPrice) 
+    external payable isAlive() {
         require(governance.isWallet(address(wallet)), "wallet is error format");
         require(infos[wallet].acquirer == address(0), "wallet is on anther acquisition");
         require(wallet.balanceOf(msg.sender) > 0, "acquirer has not split token");

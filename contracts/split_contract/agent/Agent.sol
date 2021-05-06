@@ -9,4 +9,9 @@ contract Agent {
     constructor (address goverAddr) {
         governance = IGovernance(goverAddr);
     }
+
+    modifier isAlive() {
+        require(governance.isAliveAgent(address(this)), "onlyAgent: caller is not the agent");
+        _;
+    }
 }
