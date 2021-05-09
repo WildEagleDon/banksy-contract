@@ -11,7 +11,7 @@ contract Agent {
     }
 
     modifier isAlive() {
-        require(governance.isAliveAgent(address(this)), "onlyAgent: caller is not the agent");
+        require(governance.isAliveAgent(address(this)), "isAlive: caller is not the alive agent");
         _;
     }
 }
