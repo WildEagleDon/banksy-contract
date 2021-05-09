@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.8.0;
 
+import "../ERC20.sol";
+
 contract TokenRecipient {
     event ReceivedEther(address indexed sender, uint amount);
     event ReceivedTokens(address indexed from, uint256 value, address indexed token, bytes extraData);
