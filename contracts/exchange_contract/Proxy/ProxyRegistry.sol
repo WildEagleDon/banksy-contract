@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.8.0;
-import "access/Ownable.sol";
+
+import "./access/Ownable.sol";
 import "./OwnableDelegateProxy.sol";
 
 contract ProxyRegistry is Ownable {
