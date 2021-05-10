@@ -3,7 +3,7 @@ pragma solidity >=0.6.0 <0.8.0;
 
 contract OwnedUpgradeabilityStorage {
 
-  // Current implementation
+  // Address of the current implementation
   address internal _implementation;
 
   // Owner of the contract
