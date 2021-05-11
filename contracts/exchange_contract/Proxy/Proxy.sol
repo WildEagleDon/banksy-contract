@@ -5,7 +5,7 @@ pragma solidity >=0.6.0 <0.8.0;
  * @title Proxy
  * @dev Gives the possibility to delegate any call to a foreign implementation.
  */ 
-contract Proxy {
+abstract contract Proxy {
 
   /**
    * @dev Tells the address of the implementation where every call will be delegated.

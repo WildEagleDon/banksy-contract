@@ -3,7 +3,7 @@ pragma solidity >=0.6.0 <0.8.0;
 
 import "ERC20Basic.sol";
 
-contract ERC20 is ERC20Basic {
+abstract contract ERC20 is ERC20Basic {
   function allowance(address owner, address spender)
     public view returns (uint256);
 
