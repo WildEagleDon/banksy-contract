@@ -138,14 +138,38 @@ contract("update in acquisition test", accounts => {
     assert.equal(await wallet.totalSupply(), 0);
   });
 
-  it("take back NFT", async function() { 
-    await wallet.functionCallWithValue(
-      nft.address,'0',
-      nft.contract.methods.safeTransferFrom(wallet.address, owner, 1).encodeABI(),
-      { from: owner }
+  it("split wallet againt", async function() {
+    await basicSplitAgent.start(wallet.address,[owner, account1], [100, 200]);
+
+    assert.equal(await wallet.balanceOf(owner), 100);
+    assert.equal(await wallet.balanceOf(account1), 200);
+     
+    // check the owner of wallet
+    assert.equal(await wallet.owner(), 0);
+ 
+  });
+
+  it("old acquisition start", async function() {
+    // acuire all token 
+    await tests.expectThrow(acquisitionAgent.start(wallet.address, 10, { from: owner, value: 190 * 10, gasPrice: 0}));
+
+  });
+
+  it("new acquisition start", async function() {
+    // acuire all token 
+    await tests.verifyBalanceChange(newAcquisitionAgent.address, -2000, async() =>
+      await tests.verifyBalanceChange(owner, 2000, async () => 
+        await newAcquisitionAgent.start(wallet.address, 10, { from: owner, value: 200 * 10, gasPrice: 0})
+      )
     );
 
-    assert.equal(await nft.ownerOf(tokenId), owner);
+    
+    assert.equal(await wallet.balanceOf(owner), 0);
+    assert.equal(await wallet.balanceOf(account1), 200);
+    assert.equal(await wallet.balanceOf(newAcquisitionAgent.address), 100);
+
+    // check ehter on the ethereum
+    assert.equal(await web3.eth.getBalance(newAcquisitionAgent.address), 2000);
   });
 
 });
