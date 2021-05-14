@@ -1,6 +1,6 @@
 # Banksy-contract
 
-## OverView
+## Overview
 Banksy's contract is build by harhhat.
 
 ## Installation
