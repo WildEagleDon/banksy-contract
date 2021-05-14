@@ -3,7 +3,7 @@ pragma solidity >=0.6.0 <0.8.0;
 
 import "./ERC20.sol";
 import "./Proxy/ProxyRegistry.sol";
-import "./ReentrancyGuarded.sol";
+import "./library/ReentrancyGuarded.sol";
 import "./acceess/Ownable.sol";
 import "./library/SaleKindInterface.sol";
 import "./Proxy/AuthenticatedProxy.sol";

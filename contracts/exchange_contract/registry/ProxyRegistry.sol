@@ -1,13 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.6.0 <0.8.0;
 
-import "./access/Ownable.sol";
+import "../access/Ownable.sol";
 import "./OwnableDelegateProxy.sol";
+import "./ProxyRegistryInterface.sol";
+
+/**
+ * Proxy registry; keeps a mapping of AuthenticateProxy contracts
+ * and mapping of contracts authorized to access them.
+ * Abstracted away from the Exchange (a) to reduce Exchange attack surface and (b)
+ * so that the Exchange contract can be upgraded without users needing to transfer assets to new proxies.
+ */
 
 contract ProxyRegistry is Ownable {
 
     /* DelegateProxy implementation contract. Must be initialized. */
-    address public delegateProxyImplementation;
+    address public override delegateProxyImplementation;
 
     /*                                                                                                                                               proxies by user. */
     mapping(address => OwnableDelegateProxy) public proxies;

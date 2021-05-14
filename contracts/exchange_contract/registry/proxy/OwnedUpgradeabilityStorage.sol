@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: MIT
+
 pragma solidity >=0.6.0 <0.8.0;
+
+/**
+ * @title OwnedUpgradeabilityStorage
+ * @dev This contract keeps track of the upgradeability owner
+ */
 
 contract OwnedUpgradeabilityStorage {
 
@@ -24,19 +30,4 @@ contract OwnedUpgradeabilityStorage {
     _upgradeabilityOwner = newUpgradeabilityOwner;
   }
 
-  /**
-  * @dev Tells the address of the current implementation
-  * @return address of the current implementation
-  */
-  function implementation() public view returns (address) {
-    return _implementation;
-  }
-
-  /**
-  * @dev Tells the proxy type (EIP 897)
-  * @return Proxy type, 2 for forwarding proxy
-  */
-  function proxyType() public pure returns (uint256 proxyTypeId) {
-    return 2;
-  }
 }
