@@ -4,6 +4,11 @@ pragma solidity >=0.6.0 <0.8.0;
 import "./Proxy.sol";
 import "./OwnedUpgradeabilityStorage.sol";
 
+/**
+ * @title OwnedUpgradeabilityProxy
+ * @dev This contract combines an upgradeability proxy with basic authorization control functionalities
+ */
+
 contract OwnedUpgradeabilityProxy is Proxy, OwnedUpgradeabilityStorage {
   /**
   * @dev Event to show ownership has been transferred
@@ -19,11 +24,27 @@ contract OwnedUpgradeabilityProxy is Proxy, OwnedUpgradeabilityStorage {
   event Upgraded(address indexed implementation);
 
   /**
+  * @dev Tells the address of the current implementation
+  * @return address of the current implementation
+  */
+  function implementation() public view returns (address) {
+    return _implementation;
+  }
+
+  /**
+  * @dev Tells the proxy type (EIP 897)
+  * @return Proxy type, 2 for forwarding proxy
+  */
+  function proxyType() public pure returns (uint256 proxyTypeId) {
+    return 2;
+  }
+
+  /**
   * @dev Upgrades the implementation address
   * @param implementation representing the address of the new implementation to be set
   */
   function _upgradeTo(address implementation) internal {
-    require(_implementation != implementation);
+    require(_implementation != implementation, "Proxy already uses this implementation);
     _implementation = implementation;
     emit Upgraded(implementation);
   }
@@ -49,7 +70,7 @@ contract OwnedUpgradeabilityProxy is Proxy, OwnedUpgradeabilityStorage {
    * @param newOwner The address to transfer ownership to.
    */
   function transferProxyOwnership(address newOwner) public onlyProxyOwner {
-    require(newOwner != address(0));
+    require(newOwner != address(0), "New owner cannot be the null address");
     emit ProxyOwnershipTransferred(proxyOwner(), newOwner);
     setUpgradeabilityOwner(newOwner);
   }
@@ -69,8 +90,9 @@ contract OwnedUpgradeabilityProxy is Proxy, OwnedUpgradeabilityStorage {
    * @param data represents the msg.data to bet sent in the low level call. This parameter may include the function
    * signature of the implementation to be called with the needed payload
    */
-  function upgradeToAndCall(address implementation, bytes data) payable public onlyProxyOwner {
+  function upgradeToAndCall(address implementation, bytes memory data) payable public onlyProxyOwner {
     upgradeTo(implementation);
-    require(address(this).delegatecall(data));
+    (bool success,) = address(this).delegatecall(data);
+    require(success, "Call failed after proxy upgrade");
   }
 }

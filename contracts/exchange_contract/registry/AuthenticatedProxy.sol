@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.6.0 <0.8.0;
+
+ragma solidity >=0.6.0 <0.8.0;
 
 import "./ProxyRegistry.sol";
 import "./TokenRecipient.sol";
-import "./OwnedUpgradeabilityStorage.sol";
+import "./proxy/OwnedUpgradeabilityStorage.sol";
+
+/**
+ * Proxy contract to hold access to assets on behalf of a user (e.g. ERC20 approve)
+ * and execute calls under particular conditions.
+ */
 
 contract AuthenticatedProxy is TokenRecipient, OwnedUpgradeabilityStorage {
 
@@ -34,7 +40,7 @@ contract AuthenticatedProxy is TokenRecipient, OwnedUpgradeabilityStorage {
     function initialize (address addrUser, ProxyRegistry addrRegistry)
         public
     {
-        require(!initialized);
+        require(!initialized, "Authenticated proxy already initialized");
         initialized = true;
         user = addrUser;
         registry = addrRegistry;
@@ -49,7 +55,7 @@ contract AuthenticatedProxy is TokenRecipient, OwnedUpgradeabilityStorage {
     function setRevoke(bool revoke)
         public
     {
-        require(msg.sender == user);
+        require(msg.sender == user, "Autherticated proxy can only be revoked by its user");
         revoked = revoke;
         emit Revoked(revoke);
     }
@@ -60,18 +66,19 @@ contract AuthenticatedProxy is TokenRecipient, OwnedUpgradeabilityStorage {
      * @dev Can be called by the user, or by a contract authorized by the registry as long as the user has not revoked access
      * @param dest Address to which the call will be sent
      * @param howToCall Which kind of call to make
-     * @param calldata Calldata to send
+     * @param data Calldata to send
      * @return Result of the call (success or failure)
      */
-    function proxy(address dest, HowToCall howToCall, bytes calldata)
+    function proxy(address dest, HowToCall howToCall, bytes memory data)
         public
         returns (bool result)
     {
-        require(msg.sender == user || (!revoked && registry.contracts(msg.sender)));
+        require(msg.sender == user || (!revoked && registry.contracts(msg.sender)), "Authenticated proxy can only be called by its user, or by a contract authorized by the registry as long as the user has not revoked access");
+        bytes memory ret;
         if (howToCall == HowToCall.Call) {
-            result = dest.call(calldata);
+            (result, ret) = dest.call(data);
         } else if (howToCall == HowToCall.DelegateCall) {
-            result = dest.delegatecall(calldata);
+            (result, ret) = dest.delegatecall(calldata);
         }
         return result;
     }
@@ -82,12 +89,12 @@ contract AuthenticatedProxy is TokenRecipient, OwnedUpgradeabilityStorage {
      * @dev Same functionality as `proxy`, just asserts the return value
      * @param dest Address to which the call will be sent
      * @param howToCall What kind of call to make
-     * @param calldata Calldata to send
+     * @param data Calldata to send
      */
-    function proxyAssert(address dest, HowToCall howToCall, bytes calldata)
+    function proxyAssert(address dest, HowToCall howToCall, bytes memory data)
         public
     {
-        require(proxy(dest, howToCall, calldata));
+        require(proxy(dest, howToCall, data), "Proxy assertion failed");
     }
 
 }
