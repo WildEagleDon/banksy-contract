@@ -20,7 +20,7 @@ Please create your project in [Infura](https://infura.io/). Then copy the projec
 
 Open the `hardhat.config.js`, you can change the `{PROJECT_ID}` in `infuraUrl` to your own project id in infura.
 
-### 3. set account
+### 3. Set account
 
 Open the `hardhat.config.js`, you can change the `{ACCOUNT_PRIKEY}` in `accounts` to the private key of your account in Rinkeby.
 
