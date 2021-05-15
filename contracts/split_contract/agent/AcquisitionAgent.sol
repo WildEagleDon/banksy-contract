@@ -4,6 +4,7 @@ import "../splitwallet/SplitWallet.sol";
 import "hardhat/console.sol";
 import "../agent/Agent.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 
 struct AcquisitionInfo {
@@ -27,11 +28,11 @@ contract AcquisitionAgent is Agent {
         require(infos[wallet].acquirer == address(0), "wallet is on anther acquisition");
         require(wallet.balanceOf(msg.sender) > 0, "acquirer has not split token");
         
-        uint256 payValue = (wallet.totalSupply() - wallet.balanceOf(msg.sender)) * unitPrice;
+        uint256 payValue = SafeMath.mul(SafeMath.sub(wallet.totalSupply(), wallet.balanceOf(msg.sender)), unitPrice);
         
         require(payValue <= msg.value, "ether for acquisition is not match");
         if(msg.value > payValue) {
-            Address.sendValue(payable(msg.sender), msg.value - payValue);
+            Address.sendValue(payable(msg.sender), SafeMath.sub(msg.value, payValue));
         }
         
         wallet.changeOwnerByAgent(address(this));
@@ -47,7 +48,7 @@ contract AcquisitionAgent is Agent {
 
     // to check if the acquisition is timeout
     function isTimeout(SplitWallet wallet) private view returns (bool) {
-        return ((block.timestamp - infos[wallet].beginTime) >= governance.getSetting("ACQUISITION_TIMEOUT"));
+        return (SafeMath.sub(block.timestamp, infos[wallet].beginTime) >= governance.getSetting("ACQUISITION_TIMEOUT"));
     }
 
     // to check if the acquisition is refused
@@ -74,18 +75,18 @@ contract AcquisitionAgent is Agent {
         require(wallet.balanceOf(msg.sender) > 0, "sender do not have token");
         require(!isTimeout(wallet) && !isRefuse(wallet),"acquisition is finished");
 
-        uint256 payValue = wallet.balanceOf(address(this)) * infos[wallet].unitPrice;
+        uint256 payValue = SafeMath.mul(wallet.balanceOf(address(this)), infos[wallet].unitPrice);
         uint256 msgValue = msg.value;
 
         if(msgValue > payValue) {
-            uint256 overValue = msgValue - payValue;
+            uint256 overValue = SafeMath.sub(msgValue, payValue);
             Address.sendValue(payable(msg.sender), overValue);
-            msgValue -= overValue;
+            msgValue = SafeMath.sub(msgValue, overValue);
         }
 
-        uint256 tokenCount = msgValue / infos[wallet].unitPrice;
+        uint256 tokenCount = SafeMath.div(msgValue, infos[wallet].unitPrice);
         
-        infos[wallet].amount += msgValue;
+        infos[wallet].amount = SafeMath.add(infos[wallet].amount, msgValue);
         wallet.transfer(msg.sender, tokenCount);
 
         if(msgValue == payValue) {
@@ -115,6 +116,6 @@ contract AcquisitionAgent is Agent {
         uint256 balance = wallet.balanceOf(msg.sender);
 
         wallet.burnByAgent(msg.sender, balance);
-        Address.sendValue(payable(msg.sender), infos[wallet].unitPrice * balance);
+        Address.sendValue(payable(msg.sender), SafeMath.mul(infos[wallet].unitPrice, balance));
     }
 }
