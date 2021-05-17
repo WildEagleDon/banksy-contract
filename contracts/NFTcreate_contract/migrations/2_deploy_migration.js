@@ -1,5 +1,5 @@
-const Color = artifacts.require("Color");
+const PeopleAroundPlanet = artifacts.require("PeopleAroundPlanet");
 
 module.exports = function (deployer) {
-  deployer.deploy(Color);
+  deployer.deploy(PeopleAroundPlanet);
 };
