@@ -1,0 +1,11 @@
+{
+    "name": "PeopleAroundJupiter",
+    "description": "People around the Jupiter.",
+    "image_url": "https://gateway.pinata.cloud/ipfs/QmWb4kR8pfTFEf64k6Eddjpi6uPwF1TTAL6eKUfv5VstUN",
+    "attributes": [
+        {
+            "trait_type": "cuteness",
+            "value": 3
+        }
+    ]
+}

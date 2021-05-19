@@ -1,27 +1,39 @@
-//SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/access/ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 
-contract PeopleAroundPlanet is Ownable, ERC721URIStorage, ERC721Enumerable {
-    using SafeMath for uint;
+contract PeopleAroundPlanet is ERC721 {
+    using Counters for Counters.Counter;
+    Counters.Counter private _tokenIds;
+    mapping(string => uint8) hashes;
+    string constant NOT_VALID_NFT = "008001";
+    mapping(uint256 => address) internal idToOwner;
+    mapping(uint256 => string) internal idToUri;
 
-    constructor () ERC721("PeopleAroundPlanet", "PAP") {
-    }
+    constructor() public ERC721("PeopleAroundPlanet", "PAP") {}
 
-    function mint(address _to, string memory _tokenURI) public onlyOwner returns (bool) {
-        _mintWithTokenURI(_to, _tokenURI);
-        return true;
-    }
+    function _setTokenURI(uint _tokenId, string memory _uri) internal
+        {
+            require(idToOwner[_tokenId] != address(0), NOT_VALID_NFT);
+            idToUri[_tokenId] = _uri;
 
-    function _mintWithTokenURI(address _to, string memory _tokenURI) internal {
-        uint _tokenId = totalSupply().add(1);
-        _mint(_to, _tokenId);
-        _setTokenURI(_tokenId, _tokenURI);
-    }
+        }
 
-} 
+    function awardItem(address recipient, string memory hash, string memory metadata)
+        public
+        returns (uint256) 
+        {
+
+            require(hashes[hash] != 1);
+            hashes[hash] = 1;
+            _tokenIds.increment();
+            uint256 newItemId = _tokenIds.current();
+            _mint(recipient, newItemId);
+            _setTokenURI(newItemId, metadata);
+            return newItemId;
+        }
+
+}
