@@ -19,11 +19,6 @@ contract ERC20 is Context, IERC20 {
     uint8 private _decimals;
 
 
-    constructor () {
-        _decimals = 18;
-    }
-
-
     function name() public view virtual returns (string memory) {
         return _name;
     }
@@ -92,9 +87,10 @@ contract ERC20 is Context, IERC20 {
         emit Transfer(sender, recipient, amount);
     }
 
-    function _init(string memory tokenName, string memory tokenSymbol) internal virtual {
+    function _init(string memory tokenName, string memory tokenSymbol, uint8 tokenDecimals) internal virtual {
         _name = tokenName;
         _symbol = tokenSymbol;
+        _decimals = tokenDecimals;
     }
     
     function _mint(address account, uint256 amount) internal virtual {
