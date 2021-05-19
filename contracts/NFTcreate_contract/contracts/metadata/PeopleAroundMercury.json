@@ -1,0 +1,11 @@
+{
+    "name": "PeopleAroundMercury",
+    "description": "People around the Mercury.",
+    "image_url": "https://gateway.pinata.cloud/ipfs/QmYpWLnjBUwfBbkKs5EMaRFp1jq7qXU79DYQfQYTiLD8Ja",
+    "attributes": [
+        {
+            "trait_type": "Stamina",
+            "value": 3
+        }
+    ]
+}
