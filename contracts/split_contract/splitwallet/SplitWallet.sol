@@ -21,7 +21,7 @@ contract SplitWallet is ERC20, Ownable {
     external {
         require(address(governance) == address(0), "governance has been register");
         require(address(goverAddr) != address(0), "governance is null");
-        ERC20._init(name, symbol, 18);
+        ERC20._init(name, symbol, 1);
         governance = IGovernance(goverAddr);
         transferOwnership(owner);
     }
