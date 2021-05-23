@@ -6,4 +6,5 @@ The folders distinguish between different functional Packages
 | ------- | ----------- | 
 | split_contract | the contracts used to split the NFT to ERC20 token
 | exchange_contract | the contracts used to implement the trade 
+| nft_contract | the contracts used to store the nft 
 tutorials | Some tutorials shared in internal development
