@@ -4,9 +4,9 @@ pragma solidity ^0.8.3;
 import "hardhat/console.sol";
 
 contract Token {
-  string public name = "Nader Dabit Token";
-  string public symbol = "NDT";
-  uint public totalSupply = 1000000;
+  string public name = "People Around Planet";
+  string public symbol = "PAP";
+  uint public totalSupply = 100000000;
   address public owner;
   mapping(address => uint) balances;
 
